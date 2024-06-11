@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"apigateway/models"
+	"apigateway/utils"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,22 +15,37 @@ type TransferInterface interface {
 
 type transferImplement struct{}
 
-func Transfer() TransferInterface {
+func NewTransfer() TransferInterface {
 	return &transferImplement{}
 }
 
 type BodyPayloadTransfer struct{}
 
 func (b *transferImplement) TransferBank(g *gin.Context) {
+	bodyPayload := models.Transaction{}
 
-	bodyPayloadTransfer := BodyPayloadTransfer{}
-	err := g.BindJSON(&bodyPayloadTransfer)
-
+	err := g.BindJSON(&bodyPayload)
 	if err != nil {
 		g.AbortWithError(http.StatusBadRequest, err)
 	}
 
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
+
+	defer db.Close()
+
+	result := orm.Create(&bodyPayload)
+
+	if result.Error != nil {
+		fmt.Println(err)
+		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": result.Error,
+		})
+		return
+	}
+
 	g.JSON(http.StatusOK, gin.H{
-		"message": "Hello guys this API rest for later",
+		"message": `Transaction successfully`,
+		"data":    bodyPayload,
 	})
 }

@@ -1,19 +1,33 @@
 package usecase
 
-type login struct {
+import (
+	"apigateway/models"
+	"apigateway/utils"
+)
+
+type autentifikasiImplement struct {
+}
+
+func NewAutentifikasi() LoginInterface {
+	return &autentifikasiImplement{}
 }
 
 type LoginInterface interface {
-	Authentifikasi(username, password string) bool
+	Autentifikasi(username, password string) bool
 }
 
-func (a *login) Authentifikasi(username, password string) bool {
-	if username == "admin" && password == "admin123" {
-		return true
-	}
-	return false
-}
+func (a *autentifikasiImplement) Autentifikasi(username, password string) bool {
+	// if username == "admin" && password == "admin123" {
+	// 	return true
+	// }
+	// return false
+	account := models.Account{}
 
-func NewLogin() LoginInterface {
-	return &login{}
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
+
+	defer db.Close()
+
+	orm.Find(&account, "username = ? AND password = ?", username, password)
+	return account.AccountID != ""
 }
